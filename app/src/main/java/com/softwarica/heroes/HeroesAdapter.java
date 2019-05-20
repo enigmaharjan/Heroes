@@ -1,4 +1,4 @@
-package adapter;
+package com.softwarica.heroes;
 
 import android.content.Context;
 import android.support.annotation.NonNull;
@@ -9,14 +9,11 @@ import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 
-import com.softwarica.heroes.R;
-
-
 import java.util.List;
 
 import model.Heroes;
 
-public class HeroesAdapter extends RecyclerView.Adapter<HeroesAdapter.HeroesViewHolder> {
+class HeroesAdapter extends RecyclerView.Adapter<HeroesAdapter.HeroesViewHolder> {
     Context mContext;
     List<Heroes> heroesList;
 
@@ -38,6 +35,8 @@ public class HeroesAdapter extends RecyclerView.Adapter<HeroesAdapter.HeroesView
 
         final Heroes heroes = heroesList.get(i);
 //        heroesViewHolder.image.setImage(heroes.getImage());
+        String img = heroes.getImage();
+
         heroesViewHolder.tvName.setText(heroes.getName());
         heroesViewHolder.tvDesc.setText(heroes.getDesc());
 
@@ -48,7 +47,7 @@ public class HeroesAdapter extends RecyclerView.Adapter<HeroesAdapter.HeroesView
 
     @Override
     public int getItemCount() {
-        return 0;
+        return heroesList.size();
     }
 
     public class HeroesViewHolder extends RecyclerView.ViewHolder{

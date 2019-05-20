@@ -5,13 +5,13 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.Bundle;
 import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
@@ -23,12 +23,10 @@ import android.widget.Toast;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import adapter.HeroesAdapter;
 import api.HeroesApi;
 import model.Heroes;
 import model.ImageResponse;
@@ -40,9 +38,8 @@ import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
-import retrofit2.converter.gson.GsonConverterFactory;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
     private EditText etName, etDesc;
     private Button btnAdd, btnByField, btnByMap, btnGet;
     private TextView tvResult;
@@ -65,15 +62,10 @@ public class MainActivity extends AppCompatActivity {
         btnByMap = findViewById(R.id.btnAddByMap);
         ivImage = findViewById(R.id.ivImage);
         swipeRefreshLayout = findViewById(R.id.swipe);
-        recyclerView = findViewById(R.id.recyclerView);
+        swipeRefreshLayout.setOnRefreshListener(this);
+        recyclerView = findViewById(R.id.recyclerViewMain);
 
 
-        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
-            @Override
-            public void onRefresh() {
-                tvResult.setText("");
-            }
-        });
 
         ivImage.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -110,25 +102,7 @@ public class MainActivity extends AppCompatActivity {
         });
     }
 
-    private void BrowseImage() {
-        Intent intent = new Intent(Intent.ACTION_PICK);
-        intent.setType("image/*");
-        startActivityForResult(intent, 0);
-    }
 
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if(resultCode == RESULT_OK){
-            if(data == null){
-                Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
-            }
-        }
-        Uri uri = data.getData();
-        imagePath = getRealPathFromUri(uri);
-        previewImage(imagePath);
-    }
 
 
 
@@ -217,23 +191,21 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<Heroes>> call, Response<List<Heroes>> response) {
                 List<Heroes> heroes = response.body();
-//                for(Heroes hero: heroes){
-//                    String content = "";
-//                    content += "ID: " + hero.get_id() + "\n";
-//                    content += "Image: " + hero.getImage() + "\n";
-//                    content += "Name: " + hero.getName() + "\n";
-//                    content += "Desc: " + hero.getDesc() + "\n";
-////                    tvResult.append(content);
-//
-//
-//
-//                }
+                for(Heroes hero: heroes){
+                    String content = "";
+                    content += "ID: " + hero.get_id() + "\n";
+                    content += "Image: " + hero.getImage() + "\n";
+                    content += "Name: " + hero.getName() + "\n";
+                    content += "Desc: " + hero.getDesc() + "\n";
+//                    tvResult.append(content);
+                }
 //                List<Heroes> heroesList = new ArrayList<>();
 //                heroesList = response.body();
                 HeroesAdapter heroesAdapter = new HeroesAdapter(MainActivity.this, heroes);
                 recyclerView.setAdapter(heroesAdapter);
                 recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
             }
+
 
             @Override
             public void onFailure(Call<List<Heroes>> call, Throwable t) {
@@ -266,10 +238,33 @@ public class MainActivity extends AppCompatActivity {
             }
         });
     }
+
+    //For image browsing
+    private void BrowseImage() {
+        Intent intent = new Intent(Intent.ACTION_PICK);
+        intent.setType("image/*");
+        startActivityForResult(intent, 0);
+    }
+
+    //Previewing image into imageView
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(resultCode == RESULT_OK){
+            if(data == null){
+                Toast.makeText(this, "Please select an image", Toast.LENGTH_SHORT).show();
+            }
+        }
+        Uri uri = data.getData();
+        imagePath = getRealPathFromUri(uri);
+        previewImage(imagePath);
+    }
+
     private void StrictMode(){
         StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
         StrictMode.setThreadPolicy(policy);
     }
+    //Saving Image to database
     private void SaveImageOnly(){
         File file = new File(imagePath);
 
@@ -287,5 +282,16 @@ public class MainActivity extends AppCompatActivity {
             Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
             e.printStackTrace();
         }
+    }
+
+    @Override
+    public void onRefresh() {
+        swipeRefreshLayout.setRefreshing(true);
+        refreshList();
+    }
+
+    private void refreshList() {
+        showData();
+        swipeRefreshLayout.setRefreshing(false);
     }
 }
