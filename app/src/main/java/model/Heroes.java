@@ -6,7 +6,8 @@ public class Heroes {
     private String desc;
     private String image;
 
-    public Heroes(String name, String desc) {
+    public Heroes(String image, String name, String desc) {
+        this.image = image;
         this.name = name;
         this.desc = desc;
     }

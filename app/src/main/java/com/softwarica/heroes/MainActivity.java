@@ -56,7 +56,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         etName = findViewById(R.id.etName);
         etDesc = findViewById(R.id.etDesc);
         btnAdd = findViewById(R.id.btnAdd);
-        btnGet = findViewById(R.id.btnGet);
+//        btnGet = findViewById(R.id.btnGet);
 //        tvResult = findViewById(R.id.tvResult);
         btnByField = findViewById(R.id.btnAddByField);
         btnByMap = findViewById(R.id.btnAddByMap);
@@ -94,12 +94,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
             }
         });
 
-        btnGet.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                showData();
-            }
-        });
+//        btnGet.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                showData();
+//            }
+//        });
     }
 
 
@@ -125,13 +125,16 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void saveDataByField() {
+
+        SaveImageOnly();
+        String image = imageName;
         String name = etName.getText().toString();
         String desc = etDesc.getText().toString();
 
         Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
-        Call<Void> call = heroesApi.addFieldHero(name, desc);
+        Call<Void> call = heroesApi.addFieldHero(image, name, desc);
 
         call.enqueue(new Callback<Void>() {
             @Override
@@ -215,10 +218,13 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void saveData() {
+
+        SaveImageOnly();
+        String image = imageName;
         String name = etName.getText().toString();
         String desc = etDesc.getText().toString();
 
-        Heroes heroes = new Heroes(name, desc);
+        Heroes heroes = new Heroes(image, name, desc);
 
         Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
