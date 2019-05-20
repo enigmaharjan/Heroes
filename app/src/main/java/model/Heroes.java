@@ -4,6 +4,7 @@ public class Heroes {
     private String _id;
     private String name;
     private String desc;
+    private String image;
 
     public Heroes(String name, String desc) {
         this.name = name;
@@ -32,5 +33,13 @@ public class Heroes {
 
     public void setDesc(String desc) {
         this.desc = desc;
+    }
+
+    public String getImage() {
+        return image;
+    }
+
+    public void setImage(String image) {
+        this.image = image;
     }
 }

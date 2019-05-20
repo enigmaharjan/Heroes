@@ -5,12 +5,15 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.StrictMode;
 import android.provider.MediaStore;
 import android.support.annotation.Nullable;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -19,13 +22,20 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import adapter.HeroesAdapter;
 import api.HeroesApi;
 import model.Heroes;
+import model.ImageResponse;
 import model.url;
+import okhttp3.MediaType;
+import okhttp3.MultipartBody;
+import okhttp3.RequestBody;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -38,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView tvResult;
     private ImageView ivImage;
     private SwipeRefreshLayout swipeRefreshLayout;
-    private String imagePath;
+    private String imagePath, imageName;
+    private RecyclerView recyclerView;
 
 
     @Override
@@ -49,11 +60,12 @@ public class MainActivity extends AppCompatActivity {
         etDesc = findViewById(R.id.etDesc);
         btnAdd = findViewById(R.id.btnAdd);
         btnGet = findViewById(R.id.btnGet);
-        tvResult = findViewById(R.id.tvResult);
+//        tvResult = findViewById(R.id.tvResult);
         btnByField = findViewById(R.id.btnAddByField);
         btnByMap = findViewById(R.id.btnAddByMap);
         ivImage = findViewById(R.id.ivImage);
         swipeRefreshLayout = findViewById(R.id.swipe);
+        recyclerView = findViewById(R.id.recyclerView);
 
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
@@ -141,10 +153,7 @@ public class MainActivity extends AppCompatActivity {
         String name = etName.getText().toString();
         String desc = etDesc.getText().toString();
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+        Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
         Call<Void> call = heroesApi.addFieldHero(name, desc);
@@ -165,17 +174,16 @@ public class MainActivity extends AppCompatActivity {
 
     private void saveDataByMap() {
 
+        SaveImageOnly();
         String name = etName.getText().toString();
         String desc = etDesc.getText().toString();
 
         Map<String, String> map = new HashMap<>();
         map.put("name", name);
         map.put("desc", desc);
+        map.put("image", imageName);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+        Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
         Call<Void> call = heroesApi.addMapHero(map);
@@ -198,10 +206,8 @@ public class MainActivity extends AppCompatActivity {
 
     private void showData() {
 
-        Retrofit retrofit = new Retrofit.Builder()
-                .baseUrl(url.BASE_URL)
-                .addConverterFactory(GsonConverterFactory.create())
-                .build();
+
+        Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
         Call<List<Heroes>> listCall = heroesApi.getHeroes();
@@ -210,14 +216,22 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onResponse(Call<List<Heroes>> call, Response<List<Heroes>> response) {
                 List<Heroes> heroes = response.body();
-                for(Heroes hero: heroes){
-                    String content = "";
-                    content += "ID: " + hero.get_id() + "\n";
-                    content += "Name: " + hero.getName() + "\n";
-                    content += "Desc: " + hero.getDesc() + "\n";
-                    tvResult.append(content);
-
-                }
+//                for(Heroes hero: heroes){
+//                    String content = "";
+//                    content += "ID: " + hero.get_id() + "\n";
+//                    content += "Image: " + hero.getImage() + "\n";
+//                    content += "Name: " + hero.getName() + "\n";
+//                    content += "Desc: " + hero.getDesc() + "\n";
+////                    tvResult.append(content);
+//
+//
+//
+//                }
+//                List<Heroes> heroesList = new ArrayList<>();
+//                heroesList = response.body();
+                HeroesAdapter heroesAdapter = new HeroesAdapter(MainActivity.this, heroes);
+                recyclerView.setAdapter(heroesAdapter);
+                recyclerView.setLayoutManager(new LinearLayoutManager(MainActivity.this));
             }
 
             @Override
@@ -233,10 +247,7 @@ public class MainActivity extends AppCompatActivity {
 
         Heroes heroes = new Heroes(name, desc);
 
-        Retrofit retrofit = new Retrofit.Builder()
-                            .baseUrl(url.BASE_URL)
-                            .addConverterFactory(GsonConverterFactory.create())
-                            .build();
+        Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
         Call<Void> call = heroesApi.addHero(heroes);
@@ -253,8 +264,27 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+    }
+    private void StrictMode(){
+        StrictMode.ThreadPolicy policy = new StrictMode.ThreadPolicy.Builder().permitAll().build();
+        StrictMode.setThreadPolicy(policy);
+    }
+    private void SaveImageOnly(){
+        File file = new File(imagePath);
 
+        RequestBody requestBody = RequestBody.create(MediaType.parse("multipart/form-data"), file);
+        MultipartBody.Part body = MultipartBody.Part.createFormData("imageFile", file.getName(), requestBody);
 
+        HeroesApi heroesApi = url.getInstance().create(HeroesApi.class);
+        Call<ImageResponse> responseCall = heroesApi.uploadImage(body);
 
+        StrictMode();
+        try{
+            Response<ImageResponse> imageResponseResponse = responseCall.execute();
+            imageName = imageResponseResponse.body().getFilename();
+        } catch (IOException e) {
+            Toast.makeText(this, "Error", Toast.LENGTH_SHORT).show();
+            e.printStackTrace();
+        }
     }
 }
