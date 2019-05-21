@@ -40,8 +40,6 @@ class HeroesAdapter extends RecyclerView.Adapter<HeroesAdapter.HeroesViewHolder>
     public void onBindViewHolder(@NonNull HeroesAdapter.HeroesViewHolder heroesViewHolder, int i) {
 
         final Heroes heroes = heroesList.get(i);
-//        heroesViewHolder.image.setImage(heroes.getImage());
-        String img = heroes.getImage();
         String imgpath = url.BASE_URL + "uploads/"+ heroes.getImage();
         StrictMode();
 
