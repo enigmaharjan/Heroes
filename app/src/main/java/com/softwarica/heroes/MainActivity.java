@@ -30,6 +30,7 @@ import java.util.Map;
 import api.HeroesApi;
 import model.Heroes;
 import model.ImageResponse;
+import model.LoginSignupResponse;
 import model.url;
 import okhttp3.MediaType;
 import okhttp3.MultipartBody;
@@ -41,7 +42,7 @@ import retrofit2.Retrofit;
 
 public class MainActivity extends AppCompatActivity implements SwipeRefreshLayout.OnRefreshListener {
     private EditText etName, etDesc;
-    private Button btnAdd, btnByField, btnByMap, btnGet;
+    private Button btnAdd, btnByField, btnByMap, btnLogout;
     private TextView tvResult;
     private ImageView ivImage;
     private SwipeRefreshLayout swipeRefreshLayout;
@@ -56,8 +57,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         etName = findViewById(R.id.etName);
         etDesc = findViewById(R.id.etDesc);
         btnAdd = findViewById(R.id.btnAdd);
-//        btnGet = findViewById(R.id.btnGet);
-//        tvResult = findViewById(R.id.tvResult);
+        btnLogout = findViewById(R.id.btnLogout);
         btnByField = findViewById(R.id.btnAddByField);
         btnByMap = findViewById(R.id.btnAddByMap);
         ivImage = findViewById(R.id.ivImage);
@@ -67,6 +67,12 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 
 
 
+//        btnLogout.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v) {
+//                Logout();
+//            }
+//        });
         ivImage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -102,8 +108,25 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
 //        });
     }
 
+    private void Logout() {
 
+        Retrofit retrofit = url.getInstance();
+        HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
+        Call<LoginSignupResponse> call = heroesApi.logout(url.Cookie);
+
+        call.enqueue(new Callback<LoginSignupResponse>() {
+            @Override
+            public void onResponse(Call<LoginSignupResponse> call, Response<LoginSignupResponse> response) {
+                Toast.makeText(MainActivity.this, "You logged out", Toast.LENGTH_SHORT).show();
+            }
+
+            @Override
+            public void onFailure(Call<LoginSignupResponse> call, Throwable t) {
+
+            }
+        });
+    }
 
 
     private String getRealPathFromUri(Uri uri) {
@@ -134,7 +157,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
-        Call<Void> call = heroesApi.addFieldHero(image, name, desc);
+        Call<Void> call = heroesApi.addFieldHero(url.Cookie,image, name, desc);
 
         call.enqueue(new Callback<Void>() {
             @Override
@@ -164,7 +187,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
-        Call<Void> call = heroesApi.addMapHero(map);
+        Call<Void> call = heroesApi.addMapHero(url.Cookie,map);
 
         call.enqueue(new Callback<Void>() {
             @Override
@@ -188,7 +211,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
-        Call<List<Heroes>> listCall = heroesApi.getHeroes();
+        Call<List<Heroes>> listCall = heroesApi.getHeroes(url.Cookie);
 
         listCall.enqueue(new Callback<List<Heroes>>() {
             @Override
@@ -229,7 +252,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         Retrofit retrofit = url.getInstance();
         HeroesApi heroesApi = retrofit.create(HeroesApi.class);
 
-        Call<Void> call = heroesApi.addHero(heroes);
+        Call<Void> call = heroesApi.addHero(url.Cookie,heroes);
 
         call.enqueue(new Callback<Void>() {
             @Override
@@ -278,7 +301,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
         MultipartBody.Part body = MultipartBody.Part.createFormData("imageFile", file.getName(), requestBody);
 
         HeroesApi heroesApi = url.getInstance().create(HeroesApi.class);
-        Call<ImageResponse> responseCall = heroesApi.uploadImage(body);
+        Call<ImageResponse> responseCall = heroesApi.uploadImage(url.Cookie,body);
 
         StrictMode();
         try{
@@ -297,7 +320,7 @@ public class MainActivity extends AppCompatActivity implements SwipeRefreshLayou
     }
 
     private void refreshList() {
-        showData();
+        showData()  ;
         swipeRefreshLayout.setRefreshing(false);
     }
 }
